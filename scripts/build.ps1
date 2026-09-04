@@ -36,8 +36,11 @@ $KernelSources = @(
     "kernel\entry.c",
     "kernel\serial.c",
     "kernel\alpc.c",
+    "kernel\memory.c",
+    "kernel\interrupts.c",
     "drivers\core.c",
     "drivers\pci.c",
+    "drivers\pci_msi.c",
     "drivers\legacy.c",
     "drivers\apic.c",
     "drivers\acpi.c",
@@ -52,7 +55,7 @@ $KernelSources = @(
 )
 
 $KernelObjects = @()
-Write-Host "[1/5] Building ntoskrnl.exe + drivers" -ForegroundColor Cyan
+Write-Host "[1/5] Building ntoskrnl.exe + kernel + drivers" -ForegroundColor Cyan
 foreach ($relative in $KernelSources) {
     $name = ([System.IO.Path]::GetFileNameWithoutExtension($relative)) + ".obj"
     if ($relative.StartsWith("drivers\")) { $name = "drv-" + $name }
@@ -110,5 +113,5 @@ Set-Content -Path (Join-Path $EfiNt "VERSION.TXT") -Value "NTZero Alpha 0.1`r`n0
 Write-Host "[5/5] Build complete" -ForegroundColor Green
 Write-Host "  Kernel : $Kernel"
 Write-Host "  UEFI   : $BootEfi"
-Write-Host "  Drivers: $($KernelSources.Count - 3) modules compiled into ntoskrnl.exe"
+Write-Host "  Sources: $($KernelSources.Count) kernel/driver modules compiled"
 Write-Host "  ESP    : $Esp"

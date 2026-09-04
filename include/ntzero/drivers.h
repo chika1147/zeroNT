@@ -53,6 +53,10 @@ typedef struct NTZ_FRAMEBUFFER {
 u32 PciConfigRead32(u8 bus, u8 device, u8 function, u8 offset);
 void PciConfigWrite32(u8 bus, u8 device, u8 function, u8 offset, u32 value);
 u32 PciEnumerate(NTZ_PCI_VISITOR visitor, void *context);
+u8 PciFindCapability(const NTZ_PCI_DEVICE *device, u8 capability_id);
+int PciHasMsi(const NTZ_PCI_DEVICE *device);
+int PciHasMsix(const NTZ_PCI_DEVICE *device);
+NTSTATUS PciEnableMsi(const NTZ_PCI_DEVICE *device, u8 vector, u8 destination_apic_id);
 
 NTSTATUS AcpiInitialize(void *rsdp);
 void *AcpiFindTable(const char signature[4]);

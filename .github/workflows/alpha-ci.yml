@@ -50,6 +50,16 @@ jobs:
         run: |
           .\build\hid_usb_test.exe
 
+      - name: Build PMM and DMA host test
+        shell: pwsh
+        run: |
+          clang.exe -std=c11 -Wall -Wextra -Werror -Iinclude tests/memory_test.c kernel/memory.c -o build/memory_test.exe
+
+      - name: Run PMM and DMA host test
+        shell: pwsh
+        run: |
+          .\build\memory_test.exe
+
       - name: Verify expected artifacts
         shell: pwsh
         run: |
