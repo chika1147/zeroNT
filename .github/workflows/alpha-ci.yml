@@ -40,6 +40,16 @@ jobs:
         run: |
           .\build\alpc_host_test.exe
 
+      - name: Build HID and USB mass host test
+        shell: pwsh
+        run: |
+          clang.exe -std=c11 -Wall -Wextra -Werror -Iinclude tests/hid_usb_test.c drivers/hid.c drivers/usb_mass.c -o build/hid_usb_test.exe
+
+      - name: Run HID and USB mass host test
+        shell: pwsh
+        run: |
+          .\build\hid_usb_test.exe
+
       - name: Verify expected artifacts
         shell: pwsh
         run: |
