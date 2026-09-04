@@ -45,6 +45,7 @@ $KernelSources = @(
     "drivers\apic.c",
     "drivers\acpi.c",
     "drivers\storage.c",
+    "drivers\nvme.c",
     "drivers\usb.c",
     "drivers\virtio.c",
     "drivers\net.c",

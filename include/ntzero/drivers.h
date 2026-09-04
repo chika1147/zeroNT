@@ -75,6 +75,8 @@ void IoApicRoute(u8 irq, u8 vector, u8 destination_apic_id, int masked);
 
 NTZ_DRIVER_STATE AhciProbe(const NTZ_PCI_DEVICE *device);
 NTZ_DRIVER_STATE NvmeProbe(const NTZ_PCI_DEVICE *device);
+NTSTATUS NvmeInitializePolled(const NTZ_PCI_DEVICE *device);
+NTSTATUS NvmeReadBlocks(u64 lba, u32 block_count, void *buffer, u32 buffer_bytes);
 NTZ_DRIVER_STATE XhciProbe(const NTZ_PCI_DEVICE *device);
 NTZ_DRIVER_STATE VirtioProbe(const NTZ_PCI_DEVICE *device);
 NTZ_DRIVER_STATE NetworkProbe(const NTZ_PCI_DEVICE *device);

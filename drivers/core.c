@@ -1,6 +1,8 @@
 #include "ntzero/drivers.h"
 #include "ntzero/serial.h"
 
+static int g_nvme_attempted;
+
 static void clear_summary(NTZ_DRIVER_SUMMARY *summary) {
     u8 *p = (u8 *)summary;
     usize i;
@@ -15,8 +17,24 @@ static void driver_pci_visitor(const NTZ_PCI_DEVICE *device, void *context) {
 
     state = AhciProbe(device);
     if (state != NtzDriverAbsent) ++summary->storage_controllers;
+
     state = NvmeProbe(device);
-    if (state != NtzDriverAbsent) ++summary->storage_controllers;
+    if (state != NtzDriverAbsent) {
+        ++summary->storage_controllers;
+        if (!g_nvme_attempted && state == NtzDriverNeedsDma) {
+            NTSTATUS nvme_status;
+            g_nvme_attempted = 1;
+            SerialWrite("NVME: DMA/admin-queue initialization start\n");
+            nvme_status = NvmeInitializePolled(device);
+            if (nvme_status == STATUS_SUCCESS) {
+                SerialWrite("NVME: Identify Controller + Namespace PASS\n");
+            } else {
+                SerialWrite("NVME: initialization deferred/failed status=");
+                SerialWriteHex(nvme_status);
+                SerialWrite("\n");
+            }
+        }
+    }
 
     state = XhciProbe(device);
     if (state != NtzDriverAbsent) ++summary->usb_controllers;
@@ -49,6 +67,7 @@ void DriversInitializeAll(const NTZ_BOOT_INFO *boot, NTZ_DRIVER_SUMMARY *summary
     if (summary == (NTZ_DRIVER_SUMMARY *)0) return;
 
     clear_summary(summary);
+    g_nvme_attempted = 0;
     SerialWrite("DRIVER: NTZero driver framework start\n");
     (void)PciEnumerate(driver_pci_visitor, summary);
 
@@ -60,6 +79,6 @@ void DriversInitializeAll(const NTZ_BOOT_INFO *boot, NTZ_DRIVER_SUMMARY *summary
     print_count("audio controllers", summary->audio_controllers);
     print_count("VirtIO devices", summary->virtio_devices);
     print_count("display devices", summary->display_devices);
-    SerialWrite("DRIVER: PS/2, PIT/RTC, APIC, HID and USB Mass Storage protocol APIs compiled\n");
-    SerialWrite("DRIVER: DMA/IRQ-dependent engines remain gated until memory + IDT infrastructure is active\n");
+    SerialWrite("DRIVER: IDT + PMM + DMA foundations active; NVMe admin queue can run polled\n");
+    SerialWrite("DRIVER: AHCI/xHCI/NIC/HDA transfer engines still require their queue/ring activation paths\n");
 }
