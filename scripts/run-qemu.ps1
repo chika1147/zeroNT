@@ -28,6 +28,7 @@ Write-Host "NTZero Alpha 0.1" -ForegroundColor Cyan
 Write-Host "QEMU : $($Qemu.Source)"
 Write-Host "OVMF : $Ovmf"
 Write-Host "ESP  : $Esp"
+Write-Host "HW   : q35 + xHCI + e1000 + VirtIO Net + VirtIO RNG" -ForegroundColor DarkCyan
 
 & $Qemu.Source `
     -machine q35 `
@@ -35,6 +36,13 @@ Write-Host "ESP  : $Esp"
     -smp 4 `
     -bios $Ovmf `
     -drive "format=raw,file=fat:rw:$Esp" `
+    -device "qemu-xhci,id=xhci" `
+    -net none `
+    -netdev "user,id=e1000net" `
+    -device "e1000,netdev=e1000net" `
+    -netdev "user,id=virtionet" `
+    -device "virtio-net-pci,netdev=virtionet" `
+    -device "virtio-rng-pci" `
     -serial stdio `
     -no-reboot
 
