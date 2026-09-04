@@ -1,0 +1,31 @@
+# Build output
+build/*
+!build/README.md
+
+# Generated images
+*.img
+*.iso
+*.raw
+*.qcow2
+*.vhd
+*.vhdx
+
+# Object/debug files
+*.o
+*.obj
+*.a
+*.lib
+*.pdb
+*.ilk
+*.map
+*.dSYM/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+qemu-debug.log
