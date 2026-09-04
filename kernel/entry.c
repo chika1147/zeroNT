@@ -1,6 +1,7 @@
 #include "ntzero/boot.h"
 #include "ntzero/serial.h"
 #include "ntzero/alpc.h"
+#include "ntzero/drivers.h"
 
 static void halt_forever(void) {
     for (;;) {
@@ -9,6 +10,8 @@ static void halt_forever(void) {
 }
 
 void KiSystemStartup(NTZ_BOOT_INFO *boot) {
+    NTZ_DRIVER_SUMMARY drivers;
+
     SerialInitialize();
     SerialWrite("\nNTZero Alpha 0.1\n");
     SerialWrite("KiSystemStartup: x86_64 native kernel entered\n");
@@ -24,6 +27,8 @@ void KiSystemStartup(NTZ_BOOT_INFO *boot) {
     SerialWrite("\nBOOT: descriptor bytes = ");
     SerialWriteDec(boot->uefi_descriptor_size);
     SerialWrite("\n");
+
+    DriversInitializeAll(boot, &drivers);
 
     AlpcInitialize();
     SerialWrite("ALPC: kernel transport initialized\n");

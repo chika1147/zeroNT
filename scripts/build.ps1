@@ -32,14 +32,45 @@ $Common = @(
     "-I$Include"
 )
 
-Write-Host "[1/5] Building ntoskrnl.exe" -ForegroundColor Cyan
-& $Clang @Common "-mgeneral-regs-only" "-c" (Join-Path $Root "kernel\entry.c") "-o" (Join-Path $Obj "entry.obj")
-& $Clang @Common "-mgeneral-regs-only" "-c" (Join-Path $Root "kernel\serial.c") "-o" (Join-Path $Obj "serial.obj")
-& $Clang @Common "-mgeneral-regs-only" "-c" (Join-Path $Root "kernel\alpc.c") "-o" (Join-Path $Obj "alpc.obj")
+$KernelSources = @(
+    "kernel\entry.c",
+    "kernel\serial.c",
+    "kernel\alpc.c",
+    "drivers\core.c",
+    "drivers\pci.c",
+    "drivers\legacy.c",
+    "drivers\apic.c",
+    "drivers\acpi.c",
+    "drivers\storage.c",
+    "drivers\usb.c",
+    "drivers\virtio.c",
+    "drivers\net.c",
+    "drivers\video.c"
+)
+
+$KernelObjects = @()
+Write-Host "[1/5] Building ntoskrnl.exe + drivers" -ForegroundColor Cyan
+foreach ($relative in $KernelSources) {
+    $name = ([System.IO.Path]::GetFileNameWithoutExtension($relative)) + ".obj"
+    if ($relative.StartsWith("drivers\")) { $name = "drv-" + $name }
+    $source = Join-Path $Root $relative
+    $object = Join-Path $Obj $name
+    & $Clang @Common "-mgeneral-regs-only" "-c" $source "-o" $object
+    if ($LASTEXITCODE -ne 0) { throw "Compile failed: $relative" }
+    $KernelObjects += $object
+}
 
 $Kernel = Join-Path $Build "ntoskrnl.exe"
-& $Lld "/subsystem:native" "/entry:KiSystemStartup" "/nodefaultlib" "/machine:x64" "/base:0x10000000" "/fixed" "/out:$Kernel" `
-    (Join-Path $Obj "entry.obj") (Join-Path $Obj "serial.obj") (Join-Path $Obj "alpc.obj")
+$LinkArgs = @(
+    "/subsystem:native",
+    "/entry:KiSystemStartup",
+    "/nodefaultlib",
+    "/machine:x64",
+    "/base:0x10000000",
+    "/fixed",
+    "/out:$Kernel"
+) + $KernelObjects
+& $Lld @LinkArgs
 if ($LASTEXITCODE -ne 0) { throw "ntoskrnl.exe link failed" }
 
 Write-Host "[2/5] Embedding kernel into UEFI loader" -ForegroundColor Cyan
@@ -60,7 +91,9 @@ for ($i = 0; $i -lt $KernelBytes.Length; $i += 16) {
 
 Write-Host "[3/5] Building BOOTX64.EFI" -ForegroundColor Cyan
 & $Clang @Common "-fshort-wchar" "-c" (Join-Path $Root "boot\uefi\boot.c") "-o" (Join-Path $Obj "boot.obj")
+if ($LASTEXITCODE -ne 0) { throw "UEFI loader compile failed" }
 & $Clang @Common "-c" $BlobPath "-o" (Join-Path $Obj "kernel_blob.obj")
+if ($LASTEXITCODE -ne 0) { throw "Kernel blob compile failed" }
 
 $BootEfi = Join-Path $EfiBoot "BOOTX64.EFI"
 & $Lld "/subsystem:efi_application" "/entry:EfiMain" "/nodefaultlib" "/machine:x64" "/out:$BootEfi" `
@@ -74,4 +107,5 @@ Set-Content -Path (Join-Path $EfiNt "VERSION.TXT") -Value "NTZero Alpha 0.1`r`n0
 Write-Host "[5/5] Build complete" -ForegroundColor Green
 Write-Host "  Kernel : $Kernel"
 Write-Host "  UEFI   : $BootEfi"
+Write-Host "  Drivers: $($KernelSources.Count - 3) modules compiled into ntoskrnl.exe"
 Write-Host "  ESP    : $Esp"
