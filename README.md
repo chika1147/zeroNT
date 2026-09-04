@@ -11,94 +11,89 @@
 
 **NTZero Alpha 0.1** is the first public developer preview of NTZero.
 
-NTZero is an experimental operating-system project built to explore a native NT-style kernel architecture from scratch.
+The public Alpha tree now contains a buildable x86-64 UEFI loader, a PE32+ NT Native kernel entry path, COM1 serial diagnostics and an in-kernel ALPC transport core.
 
 > [!WARNING]
-> Alpha 0.1 is development software. QEMU is the primary target.
-> Do not use it for important data or production systems.
+> Alpha 0.1 is development software. QEMU is the primary runtime target. Do not use it for important data or production systems.
 
-## Current target
+## What is in the public Alpha source
 
-- Architecture: x86_64
-- Firmware: UEFI
-- Primary emulator: QEMU
-- Kernel design: native / from scratch
-- Development hosts: Windows, macOS, Linux
+- x86-64 UEFI `BOOTX64.EFI` loader source
+- manual PE32+ kernel mapping
+- final UEFI memory-map handoff and `ExitBootServices()`
+- `ntoskrnl.exe` linked as NT Native, preferred ImageBase `0x10000000`
+- `KiSystemStartup`
+- COM1 serial diagnostics
+- ALPC connection ports
+- ALPC client/server communication ports
+- ALPC connect/accept
+- message IDs and local send/receive queue
+- disconnect path
+- host-side ALPC transport test
 
-## Development direction
+The scheduler-backed blocking wait/wake path for ALPC is the next kernel integration step. When no message is queued, the current public Alpha transport returns `STATUS_PENDING` rather than sleeping the caller.
 
-NTZero is being developed toward:
+## Build on Windows
 
-- UEFI boot
-- x86_64 long mode
-- Physical and virtual memory management
-- Exceptions and interrupts
-- APIC / SMP
-- Preemptive scheduling
-- Ring 3 user mode
-- System calls
-- Native process and thread model
-- LPC / ALPC-style IPC
-- VFS and storage
-- USB HID
-- Networking
-- Native GUI / desktop
+Requirements:
 
-Not every item above is complete in Alpha 0.1. This list describes the project direction.
+- LLVM/Clang
+- LLD
+- QEMU x86-64
+- EDK2/OVMF x86-64 firmware
+
+Build:
+
+```powershell
+.\scripts\build.ps1
+```
+
+Run — no Stage or CPU-count argument is required:
+
+```powershell
+.\scripts\run-qemu.ps1
+```
+
+The run script defaults to QEMU `q35`, 2 GiB RAM and 4 virtual CPUs.
+
+## Expected serial start
+
+```text
+NTZero Alpha 0.1
+KiSystemStartup: x86_64 native kernel entered
+BOOT: UEFI ExitBootServices complete
+ALPC: kernel transport initialized
+NTZero Alpha 0.1: READY
+```
 
 ## Repository layout
 
 ```text
 zeroNT/
-├─ boot/
-├─ kernel/
-├─ drivers/
-├─ include/
-├─ docs/
-├─ scripts/
-├─ build/
+├─ boot/uefi/          UEFI boot loader
+├─ kernel/             native kernel and ALPC core
+├─ include/ntzero/     public/internal kernel headers
+├─ tests/              host-side subsystem tests
+├─ scripts/            build and QEMU launch scripts
+├─ docs/               build, validation and history
+├─ build/              generated outputs (ignored)
 ├─ VERSION
-├─ CHANGELOG.md
 └─ README.md
 ```
 
-## Running the QEMU image
+## Validation
 
-Put the built disk image at:
+The public Alpha source has been compile/link validated with Clang/LLD 17 using `-Wall -Wextra -Werror`. The ALPC host transport test passed for named port creation, connect, accept and heartbeat send/receive.
 
-```text
-build/ntzero.img
-```
+QEMU runtime boot was **not** executed in the artifact build environment because QEMU was unavailable there, so compile success is not being presented as proof of a completed runtime boot test.
 
-### Windows
+See [docs/BUILD.md](docs/BUILD.md) and [docs/VALIDATION-ALPHA-0.1.md](docs/VALIDATION-ALPHA-0.1.md).
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run-qemu.ps1
-```
+## Development direction
 
-### macOS / Linux
+NTZero is being developed toward memory management, exceptions/interrupts, APIC/SMP, preemptive scheduling, Ring 3, native processes/threads, system calls, fuller LPC/ALPC semantics, VFS/storage, USB HID, networking and a native GUI/desktop.
 
-```bash
-chmod +x scripts/run-qemu.sh
-./scripts/run-qemu.sh
-```
-
-## Version
-
-```text
-NTZero Alpha 0.1
-0.1.0-alpha
-```
-
-## Release status
-
-Alpha releases are intended for developers and testers. Kernel interfaces, ABI, file formats, drivers and boot behavior may change without compatibility guarantees.
-
-## Contributing
-
-Bug reports, documentation fixes, QEMU testing and hardware testing are welcome.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Historical v4.0-v5.0 development notes are preserved in [docs/HISTORY-v4-v5.md](docs/HISTORY-v4-v5.md). They are historical milestones and should not be read as a claim that every earlier subsystem is already restored in the public Alpha 0.1 tree.
 
 ## License
 

@@ -1,9 +1,23 @@
 # NTZero Build Output
 
-Generated disk images and build artifacts belong here.
+Generated build files are intentionally ignored by Git.
 
-The QEMU launch scripts expect:
+Run:
+
+```powershell
+.\scripts\build.ps1
+```
+
+The build creates:
 
 ```text
-build/ntzero.img
+build/ntoskrnl.exe
+build/esp/EFI/BOOT/BOOTX64.EFI
+build/esp/NTZERO/ntoskrnl.exe
+```
+
+Then start QEMU with:
+
+```powershell
+.\scripts\run-qemu.ps1
 ```
