@@ -1,0 +1,59 @@
+name: NTZero Alpha CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build x86-64 UEFI + NT Native kernel
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show LLVM tools
+        shell: pwsh
+        run: |
+          clang.exe --version
+          lld-link.exe /? | Select-Object -First 5
+
+      - name: Build NTZero Alpha 0.1
+        shell: pwsh
+        run: |
+          .\scripts\build.ps1
+
+      - name: Build ALPC host test
+        shell: pwsh
+        run: |
+          clang.exe -std=c11 -Wall -Wextra -Werror -Iinclude tests/alpc_host_test.c kernel/alpc.c -o build/alpc_host_test.exe
+
+      - name: Run ALPC host test
+        shell: pwsh
+        run: |
+          .\build\alpc_host_test.exe
+
+      - name: Verify expected artifacts
+        shell: pwsh
+        run: |
+          if (-not (Test-Path .\build\ntoskrnl.exe)) { throw "ntoskrnl.exe missing" }
+          if (-not (Test-Path .\build\esp\EFI\BOOT\BOOTX64.EFI)) { throw "BOOTX64.EFI missing" }
+          Get-Item .\build\ntoskrnl.exe, .\build\esp\EFI\BOOT\BOOTX64.EFI | Format-Table Name,Length
+
+      - name: Upload Alpha build
+        uses: actions/upload-artifact@v4
+        with:
+          name: NTZero-Alpha-0.1-x86_64
+          if-no-files-found: error
+          path: |
+            build/ntoskrnl.exe
+            build/esp/EFI/BOOT/BOOTX64.EFI
+            build/esp/NTZERO/ntoskrnl.exe
+            build/esp/NTZERO/VERSION.TXT
