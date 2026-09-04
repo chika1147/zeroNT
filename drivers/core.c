@@ -24,6 +24,12 @@ static void driver_pci_visitor(const NTZ_PCI_DEVICE *device, void *context) {
     state = NetworkProbe(device);
     if (state != NtzDriverAbsent) ++summary->network_controllers;
 
+    state = WirelessProbe(device);
+    if (state != NtzDriverAbsent) ++summary->wireless_controllers;
+
+    state = AudioProbe(device);
+    if (state != NtzDriverAbsent) ++summary->audio_controllers;
+
     state = VirtioProbe(device);
     if (state != NtzDriverAbsent) ++summary->virtio_devices;
 
@@ -50,7 +56,10 @@ void DriversInitializeAll(const NTZ_BOOT_INFO *boot, NTZ_DRIVER_SUMMARY *summary
     print_count("storage controllers", summary->storage_controllers);
     print_count("xHCI controllers", summary->usb_controllers);
     print_count("network controllers", summary->network_controllers);
+    print_count("wireless controllers", summary->wireless_controllers);
+    print_count("audio controllers", summary->audio_controllers);
     print_count("VirtIO devices", summary->virtio_devices);
     print_count("display devices", summary->display_devices);
-    SerialWrite("DRIVER: legacy PS/2, PIT/RTC and APIC APIs compiled; activation deferred until IDT/IRQ routing\n");
+    SerialWrite("DRIVER: PS/2, PIT/RTC, APIC, HID and USB Mass Storage protocol APIs compiled\n");
+    SerialWrite("DRIVER: DMA/IRQ-dependent engines remain gated until memory + IDT infrastructure is active\n");
 }
