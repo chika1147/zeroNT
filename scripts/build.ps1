@@ -45,7 +45,10 @@ $KernelSources = @(
     "drivers\usb.c",
     "drivers\virtio.c",
     "drivers\net.c",
-    "drivers\video.c"
+    "drivers\video.c",
+    "drivers\audio_wireless.c",
+    "drivers\hid.c",
+    "drivers\usb_mass.c"
 )
 
 $KernelObjects = @()
