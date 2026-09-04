@@ -35,6 +35,8 @@ typedef struct NTZ_DRIVER_SUMMARY {
     u32 storage_controllers;
     u32 usb_controllers;
     u32 network_controllers;
+    u32 wireless_controllers;
+    u32 audio_controllers;
     u32 virtio_devices;
     u32 input_controllers;
     u32 timers;
@@ -72,6 +74,8 @@ NTZ_DRIVER_STATE NvmeProbe(const NTZ_PCI_DEVICE *device);
 NTZ_DRIVER_STATE XhciProbe(const NTZ_PCI_DEVICE *device);
 NTZ_DRIVER_STATE VirtioProbe(const NTZ_PCI_DEVICE *device);
 NTZ_DRIVER_STATE NetworkProbe(const NTZ_PCI_DEVICE *device);
+NTZ_DRIVER_STATE AudioProbe(const NTZ_PCI_DEVICE *device);
+NTZ_DRIVER_STATE WirelessProbe(const NTZ_PCI_DEVICE *device);
 
 NTSTATUS FramebufferConfigure(const NTZ_FRAMEBUFFER *framebuffer);
 void FramebufferPutPixel(u32 x, u32 y, u32 argb);
