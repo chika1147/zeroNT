@@ -1,0 +1,13 @@
+/build/
+/run/
+/backup/
+/disk/System/*.img
+/disk/System/*.ELF
+/disk/EFI/BOOT/*.EFI
+/disk/boot-media.img
+*.o
+*.obj
+*.log
+*.iso
+*.img
+*.zip

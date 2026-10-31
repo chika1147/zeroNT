@@ -1,0 +1,52 @@
+zeroNT v33.0 Beta - Dynamic Resolution Build Validation
+========================================================
+
+Baseline:
+- v33.0 Beta Network + Audio upgrade
+- Native EXE v2 / double-click fix
+- HW + Memory upgrades retained
+
+Dynamic-resolution changes verified statically/build-time:
+- UEFI GOP mode enumeration and SetMode path compiled
+- boot.cfg defaults to video=auto
+- supports video=current and video=WIDTHxHEIGHT
+- BootInfo uses selected GOP width/height/pitch/pixel format
+- classic UI backbuffer allocated from PMM pages, not the 16 MiB heap
+- Classic shell window defaults derive from current work area
+- Native GUI window cap derives from current work area
+- SysGuiScreenSize added for Ring-3 apps
+- 13 Native EXE apps build with screen-aware initial sizing
+- CMD MODE reports width/height/pitch
+
+Clean build:
+- make clean && make -j2 all : PASS
+- compiler warning/error scan : 0 warnings, 0 errors
+- BOOTX64.EFI : PASS
+- kernel.elf : PASS
+- 13 Native Ring-3 SYSTEM32 EXE images : PASS
+- 5 ZEX compatibility/test apps : PASS
+
+Filesystem regressions:
+- rootfs verify : PASS
+- recursive FAT32 copy/move/delete test : PASS
+
+Layout model checks:
+- 640x480 : PASS
+- 800x600 : PASS
+- 1024x768 : PASS
+- 1280x800 : PASS
+- 1366x768 : PASS
+- 1600x900 : PASS
+- 1920x1080 : PASS
+- 1920x1200 : PASS
+
+VMware/ISO artifact:
+- UEFI boot image rebuilt : PASS
+- ISO9660/El Torito image embedding validation : PASS
+- boot.cfg inside boot image contains video=auto : PASS
+
+Runtime limitation:
+The artifact environment does not provide VMware or QEMU, so actual GOP mode
+switching and framebuffer output have not been runtime-boot-tested here.
+This upgrade follows the selected UEFI GOP mode at boot. Live guest resolution
+changes after ExitBootServices require a native VMware SVGA/QEMU display driver.

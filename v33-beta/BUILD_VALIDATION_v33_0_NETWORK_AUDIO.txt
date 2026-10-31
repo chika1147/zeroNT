@@ -1,0 +1,34 @@
+zeroNT v33.0 Beta — Network + Audio Build Validation
+=====================================================
+
+Build command:
+  make clean
+  make -j2 all
+
+Result:
+  PASS
+  compiler warning/error lines: 0
+
+Artifacts built:
+  build/BOOTX64.EFI
+  build/kernel.elf
+  disk/boot-media.img (96 MiB)
+  13 native Ring-3 /SYSTEM32 EXE apps
+  5 /APPS ZEX compatibility/test apps
+
+Root filesystem verification:
+  PASS — all 13 SYSTEM32 EXE files verified
+  PASS — HELLO/WINDOW/AUDIO/NET/USER ZEX files verified
+  PASS — README.TXT verified
+
+FAT32 tree regression:
+  PASS — recursive mkdir/write/copy/move/delete and free-space recovery
+
+ISO structure:
+  PASS — ISO9660/El Torito UEFI boot image points to embedded 16 MiB ESP
+
+Not runtime-tested in this artifact environment:
+  e1000 packet I/O in QEMU/VMware
+  DHCP/DNS/TCP/UDP live network traffic
+  AC97 DMA playback
+  VMware HDA playback (HDA playback driver not included)
