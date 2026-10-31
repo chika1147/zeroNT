@@ -1,0 +1,43 @@
+zeroNT v33.0 Beta - Runtime Display Driver + Settings
+Build validation date: 2026-09-20
+
+COMPILE/LINK
+- make -j2 all: PASS
+- compiler warnings detected in build log: 0
+- compiler errors detected in build log: 0
+- BOOTX64.EFI: PASS (15872 bytes)
+- KERNEL.ELF: PASS (323856 bytes)
+- boot-media.img: PASS (100663296 bytes)
+
+FILESYSTEM
+- FAT32 recursive tree test: PASS
+- RootFS application verification: PASS
+- Compact 8 MiB ISO RootFS verification: PASS
+- 13 /SYSTEM32 native Ring-3 EXE apps verified
+- 5 /APPS ZEX test images verified
+
+DISPLAY CHANGES
+- VMware SVGA II runtime driver path: compiled
+- QEMU/Bochs VBE runtime driver path: compiled
+- UEFI GOP fallback: compiled
+- SysDisplayCaps / SysDisplaySetMode: compiled
+- CONTROL.EXE Display Settings UI: compiled
+- Runtime backbuffer reconfiguration: compiled
+- Ring-3 window clamp/repaint on mode change: compiled
+- /SYSTEM/DISPLAY.CFG persistence path: compiled
+
+ISO
+patched ['/EFI/BOOT/BOOTX64.EFI'] size 15872 cluster 4246 n 8
+patched ['/SYSTEM/KERNEL.ELF', '/KERNEL.ELF'] size 323856 cluster 4254 n 159
+patched ['/SYSTEM/ROOTFS.IMG', '/ROOTFS.IMG'] size 8388608 cluster 146 n 4096
+patched ['/STARTUP.NSH'] size 57 cluster 6 n 1
+patched ['/CONFIG/BOOT.CFG'] size 63 cluster 4242 n 1
+patched ['/CONFIG/DRIVERS.CFG'] size 258 cluster 4243 n 1
+patched ['/CONFIG/SECURITY.CFG'] size 345 cluster 4244 n 1
+patched ['/CONFIG/SYSTEM.CFG'] size 751 cluster 4245 n 1
+zeroNT_v33_0_BETA_DISPLAY_DRIVER_SETTINGS_UEFI_BOOT.img 16777216 fabbc013d61eb2fbdf42701a85889f0ab32a6b9cb02a689656c98c0d6992c5fe
+zeroNT_v33_0_BETA_DISPLAY_DRIVER_SETTINGS_VMWARE_UEFI.iso 16826368 4e09ac7ec53a658464f520e8a055762cfbce45319796808b206f70c0ff676e3f
+ISO validation: PASS
+
+RUNTIME NOTE
+VMware/QEMU are not available in this build container, so the hardware I/O path has not been end-to-end boot tested here. Boot the supplied ISO in VMware first; if a mode change fails, zeroNT retains the current usable mode and the next iteration can be adjusted from the resulting screen/log.

@@ -1,0 +1,3 @@
+@echo -off
+echo Starting zeroNT...
+\EFI\BOOT\BOOTX64.EFI

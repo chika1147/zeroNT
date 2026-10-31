@@ -1,0 +1,58 @@
+zeroNT v33.0 Beta - Phase 1-10 build validation
+Date: 2026-09-20
+
+SOURCE / BUILD
+- 31 kernel C++ translation units compiled
+- 1 kernel assembly translation unit compiled
+- clean `make clean && make -j2 all`: PASS
+- compiler warnings in clean build log: 0
+- compiler errors in clean build log: 0
+- BOOTX64.EFI link: PASS
+- KERNEL.ELF static PIE link: PASS
+- FAT32 boot-media generation: PASS
+
+ROOTFS / EXTERNAL RING-3 APPS
+- /APPS/HELLO.ZEX  : PASS (valid ZEXE header)
+- /APPS/WINDOW.ZEX : PASS (valid ZEXE header)
+- /APPS/AUDIO.ZEX  : PASS (valid ZEXE header)
+- /APPS/NET.ZEX    : PASS (valid ZEXE header)
+- /APPS/USER.ZEX   : PASS (valid ZEXE header)
+- /README.TXT      : PASS
+
+FAT32 REGRESSION
+- mount: PASS
+- nested mkdir: PASS
+- file write: PASS
+- recursive tree copy: PASS
+- copied root/nested data verification: PASS
+- recursive tree move/rename: PASS
+- recursive tree delete: PASS
+
+FINAL ARTIFACT SIZES
+- build/BOOTX64.EFI       12,288 bytes
+- build/kernel.elf       271,880 bytes
+- disk/System/rootfs.img 67,108,864 bytes
+- disk/boot-media.img   100,663,296 bytes
+
+SHA256
+- BOOTX64.EFI:
+  be9575e5c8d418cc39d8d8ff34cad2ff828df3e2dddc83305f482c97a18b7071
+- kernel.elf:
+  5a1df43dba672b085729feeac1b0b4943be376ef53aab1fb32a28c974b7e4388
+- rootfs.img:
+  75590d3e1fce1356a85dfd599b15b0244d347a6031db3c8592c006bf6c8532c4
+- boot-media.img:
+  c2a72af7c98c5cc381a26d00fda7d05ed4dc08fde0afae58a9fed439559d470f
+
+IMPORTANT RUNTIME LIMITATION
+This environment does not include QEMU/VMware, so boot-time behavior of NVMe,
+xHCI, TCP, audio, private-CR3 Ring-3 execution and the GUI has not been runtime
+validated here. The source builds cleanly and host-side filesystem/rootfs tests
+pass. Run the included run.ps1 on the normal zeroNT QEMU/VMware machine before
+promoting this Beta toward the public release.
+
+KNOWN PUBLIC-RELEASE REMAINING WORK
+See PUBLIC_RELEASE_REMAINING.md. Major items include USB device class
+enumeration/HID/Mass Storage, FAT LFN create/write, asynchronous processes/IPC,
+full shell-app migration to ZEX, complete multi-socket TCP/TLS, and real
+hardware/soak/installer recovery testing.

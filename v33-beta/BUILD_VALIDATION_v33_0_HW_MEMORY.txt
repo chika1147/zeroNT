@@ -1,0 +1,89 @@
+zeroNT v33.0 Beta - Hardware + Memory validation
+================================================
+
+Target
+------
+Current branch: zeroNT v33.0 Beta
+Upgrade: Priority 1 (Driver/Hardware) + Priority 2 (Memory)
+
+Clean build
+-----------
+Command: make clean && make -j2 all
+Result: PASS
+Compiler warnings found in build log: 0
+Compiler errors found in build log: 0
+
+Output format
+-------------
+build/BOOTX64.EFI : PE32+ EFI application, x86-64
+build/kernel.elf  : ELF64 x86-64 static PIE
+root filesystem   : 64 MiB FAT32 image
+boot media        : 96 MiB image
+
+Application/rootfs verification
+-------------------------------
+5 legacy/test ZEX files: PASS
+13 Native EXE v2 SYSTEM32 applications: PASS
+README.TXT: PASS
+
+FAT32 recursive regression
+--------------------------
+mount: PASS
+mkdir source/nested: PASS
+write root/nested files: PASS
+recursive copy: PASS
+recursive move: PASS
+recursive delete: PASS
+free-space query after test: PASS (66029568 bytes)
+
+Hardware changes included
+-------------------------
+- ACPI table validation + MADT/HPET/MCFG discovery
+- Local APIC detection/enable state
+- HPET initialization/counter
+- PCI capability walk + MSI/MSI-X discovery
+- MSI configuration API
+- AHCI DMA-allocation cleanup / failure unwind
+- NVMe bounded READ/WRITE/FLUSH retries
+- xHCI root-port hotplug tracking
+- Driver Manager topology/hotplug/capability statistics
+
+Memory changes included
+-----------------------
+- PMM OOM/double-free/invalid-free accounting
+- contiguous page allocation + reserve range
+- PMM consistency validation
+- guarded kernel-thread stacks
+- guarded Ring-3 user stacks
+- PageOwned user mappings
+- recursive user address-space reclamation
+- heap corruption/double-free checks + consistency validation
+- memory diagnostics through CMD MEM
+
+Runtime limitation
+------------------
+QEMU/VMware is not installed in the artifact build environment. Therefore this
+record validates compilation, linking, filesystem artifacts and host-side FAT32
+regressions. It does not claim runtime validation of APIC, HPET, AHCI, NVMe or
+xHCI on VMware/QEMU/physical hardware.
+
+Known remaining hardware/memory work
+------------------------------------
+- xHCI device enumeration + USB HID + USB mass-storage class layer
+- full I/O APIC/GSI migration
+- runtime-tested MSI/MSI-X migration per driver
+- broader PCIe ECAM / hardware quirks
+- user mmap/shared-memory API
+- optional demand paging / COW
+- VMware/QEMU + real-hardware soak tests
+
+VMware/UEFI ISO packaging
+-------------------------
+Compact ISO rootfs: 8 MiB FAT image, current 13 Native EXE + 5 ZEX verified
+El Torito catalog: PASS
+Embedded EFI boot image equality check: PASS
+Boot image size: 16 MiB
+ISO size: 16826368 bytes
+
+The ISO packaging check verifies the UEFI boot image and El Torito structure,
+but it is not a substitute for actually booting VMware/QEMU.

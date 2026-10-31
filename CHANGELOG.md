@@ -1,6 +1,12 @@
 # Changelog
 
-## [Unreleased / documentation refresh] - 2026-10-31
+## [Unreleased / v33 source-only import] - 2026-10-31
+
+- Published **131 reviewed source/config files** in `v33-beta/`, preserving the separate public Alpha C/PE32+ kernel and `VERSION=0.1.0-alpha`.
+- The v33 standalone Clang/LLD CI passed build/link and artifact-format checks for the UEFI loader and ELF64 kernel.
+- Runtime boot, GUI, real hardware transfers and installed-disk reboot remain **unverified**.
+
+## [Earlier documentation refresh (before import)] - 2026-10-31
 
 ### Updated
 

@@ -1,0 +1,10 @@
+zeroNT v33.0 Dynamic Resolution layout model validation
+
+640x480: classic=499x343, notepad=600x390 -> PASS
+800x600: classic=624x434, notepad=608x411 -> PASS
+1024x768: classic=798x562, notepad=778x532 -> PASS
+1280x800: classic=998x586, notepad=972x555 -> PASS
+1366x768: classic=1065x562, notepad=1038x532 -> PASS
+1600x900: classic=1248x662, notepad=1100x627 -> PASS
+1920x1080: classic=1280x799, notepad=1100x757 -> PASS
+1920x1200: classic=1280x820, notepad=1100x760 -> PASS
