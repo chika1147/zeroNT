@@ -63,6 +63,25 @@ class V33InventoryTests(unittest.TestCase):
             self.assertEqual(len(report["archive_sha256"]), 64)
             self.assertIn("boot/uefi/boot.c", report["candidate_paths"])
 
+    def test_nested_stage1234_source_archive(self):
+        import io
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / "v33-ALL.zip"
+            payload = io.BytesIO()
+            with zipfile.ZipFile(payload, "w") as inner:
+                inner.writestr("zeront_v33_stage1234_fixed/kernel/kernel.cpp", "int test;")
+                inner.writestr("zeront_v33_stage1234_fixed/bootloader/main.cpp", "int test;")
+            inner_bytes = payload.getvalue()
+            with zipfile.ZipFile(archive, "w") as outer:
+                outer.writestr("package/zeroNT_v33_0_BETA_STAGE1234_FIX_FULL_SOURCE.zip", inner_bytes)
+                outer.writestr("package/boot.img", "pretend disk")
+            report = source.inventory(archive)
+            self.assertEqual(report["kind"], "nested_source_zip")
+            self.assertEqual(report["source_files"], 2)
+            self.assertEqual(report["nested_source_sha256"], hashlib.sha256(inner_bytes).hexdigest())
+            self.assertEqual(report["files_total"], 2)
+
     def test_rejects_zip_traversal_paths(self):
         self.assertFalse(source.safe_member("../secrets.txt"))
         self.assertFalse(source.safe_member("/etc/passwd"))
