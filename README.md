@@ -8,13 +8,13 @@
 ![Boot](https://img.shields.io/badge/boot-UEFI-informational)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-> **重要 / Important:** zeroNT has **two distinct code lines**. The repository root still builds the public **0.1.0-alpha** PE32+ NT Native kernel. A separate **v33.0 Beta Stage 1–4** C++/ELF64 source package has been inspected and host-tested, but **its complete source files are not yet in `main`**. Do not confuse source compilation with a successful OS boot.
+> **重要 / Important:** zeroNT has **two distinct code lines**. The repository root still builds the public **0.1.0-alpha** PE32+ NT Native kernel. A separate **v33.0 Beta Stage 1–4** C++/ELF64 source package has been inspected and host-tested, and **all 131 source-only v33 files are now tracked under [`v33-beta/`](v33-beta/)**. Do not confuse source compilation with a successful OS boot.
 
 ## 現在の開発状況 / Project status
 
 | 項目 / Track | 内容 / Status | GitHub 状況 |
 |---|---|---|
-| **v33.0 Beta (active development)** | 独自UEFI/ELF64カーネル、クラシックGUI、FAT32/SafeFS、インストーラー、ドライバー群 | Source-only import is being prepared; **not a release** |
+| **v33.0 Beta (active development)** | 独自UEFI/ELF64カーネル、クラシックGUI、FAT32/SafeFS、インストーラー、ドライバー群 | **131 source/config files published in [`v33-beta/`](v33-beta/)**; standalone CI build PASS; **not a release** |
 | **0.1.0-alpha (public baseline)** | UEFI PE32+ loader + NT Native kernel + IDT/PMM/DMA/PCI/NVMe foundations + ALPC | **Available and CI-tested under repository root** |
 | **公開安定版 / Stable release** | End-to-end QEMU, persistent install/reboot and hardware validation | **Not available** |
 
@@ -22,7 +22,7 @@ The repository root `VERSION` remains `0.1.0-alpha` because the root build scrip
 
 ## v33.0 Beta — 開発中の機能
 
-The uploaded v33.0 Beta Stage 1–4 source package contains code for:
+The published [v33.0 Beta Stage 1–4 source tree](v33-beta/) contains code for:
 
 - **UEFI + ELF64 kernel:** `BOOTX64.EFI` loader and `KERNEL.ELF` kernel, distinct from the Alpha `ntoskrnl.exe`.
 - **Classic desktop:** windows, Explorer, taskbar, Start menu, keyboard/mouse input and display settings.
@@ -57,10 +57,10 @@ zeroNT/
 ├── tests/                 Public Alpha host tests
 ├── docs/                  Development, validation, and source-import reports
 ├── VERSION                Current public root build: 0.1.0-alpha
-└── v33-beta/              Separate C++/ELF64 source subtree (import pending)
+└── v33-beta/              Complete source-only C++/ELF64 Beta snapshot
 ```
 
-**Do not overwrite `boot/` or `kernel/` with the v33 code.** Import v33 under `v33-beta/` on a dedicated branch first. After the source import, v33 build instructions will be in `v33-beta/README.md`.
+**Do not overwrite `boot/` or `kernel/` with the v33 code.** The entire source-only snapshot is now in [`v33-beta/`](v33-beta/); read [`v33-beta/README.md`](v33-beta/README.md) for its build instructions.
 
 ## ビルド / Build
 
@@ -79,11 +79,12 @@ Optional serial-log smoke test (does **not** validate GUI or installation):
 .\scripts\test-qemu-boot.bat --timeout 120
 ```
 
-### v33.0 Beta (separate **local source package**)
+### v33.0 Beta (standalone source in [`v33-beta/`](v33-beta/))
 
-Build the separately provided full v33 source package; these commands are **not** for the current repository root:
+To build v33 from this repository on Windows, enter the separate v33 source directory first:
 
 ```powershell
+cd v33-beta
 .\build.ps1
 .\verify-beta.ps1
 ```
@@ -91,17 +92,19 @@ Build the separately provided full v33 source package; these commands are **not*
 On Linux with Clang/LLD:
 
 ```bash
-make -j2 all
+make -C v33-beta -j2 build/BOOTX64.EFI build/kernel.elf
 ```
+
+The CI-tested targets compile/link the EFI loader and ELF64 kernel without the large rootfs seed. Full `make all` or boot-media packaging requires the separate rootfs base image.
 
 The source-only ZIP intentionally excludes generated images, including the FAT32 rootfs image required by some packaging and runtime tests. Use the separate verified buildable source package for complete local builds until this dependency is reproducibly generated from source.
 
-To upload all v33 sources, follow [GitHub source import guide](docs/V33-SOURCE-IMPORT.md). The import requires an authenticated Git push; updating this README alone does not publish the v33 code.
+**All 131 source/config files have now been imported into [`v33-beta/`](v33-beta/)**. See the [provenance and import guide](docs/V33-SOURCE-IMPORT.md) for details.
 
 ## 今後の目標 / Next steps
 
-1. Publish the reviewed **source-only** `v33-beta/` tree in a separate PR without images, ISO, or credentials.
-2. CI-build the EFI loader and ELF64 kernel with Clang/LLD, retaining Alpha CI.
+1. **Completed:** publish the reviewed **source-only** `v33-beta/` tree without images, ISO, or credentials.
+2. **Completed (compile/link only):** independent v33 EFI-loader/ELF64 kernel GitHub CI; Alpha CI remains separate.
 3. Run and record QEMU/OVMF boot logs, GUI/input and installed virtual-disk reboot tests.
 4. Fix remaining device, installation, and recovery regressions before any release or stable badge.
 
@@ -113,4 +116,4 @@ MIT. See [LICENSE](LICENSE).
 
 ---
 
-**English summary:** zeroNT is a from-scratch NT-inspired hobby OS. The GitHub repository currently holds a CI-tested Alpha baseline and documentation about the separately built v33.0 Beta source package. The v33 source itself will be published under its own subtree, and no production-ready claim is made.
+**English summary:** zeroNT is a from-scratch NT-inspired hobby OS. The GitHub repository currently holds a CI-tested Alpha baseline and documentation about the separately built v33.0 Beta source package. The v33 source-only snapshot is now published under its own subtree; no production-ready or QEMU runtime claim is made.

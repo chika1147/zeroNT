@@ -2,19 +2,19 @@
 
 ## Where the project stands (2026-10-31)
 
-Two distinct architectures currently coexist **as development tracks**, not as a unified build:
+Two distinct architectures now coexist **in the same repository**, not as a unified build:
 
 | Track | Architecture | Validation |
 |---|---|---|
 | Public Alpha 0.1 | UEFI PE32+ loader -> PE32+ NT Native `ntoskrnl.exe` | GitHub Actions compile / host-test PASS |
 | v33.0 Beta Stage 1–4 | UEFI PE32+ loader -> ELF64 `KERNEL.ELF` | Source package Clang 17 build + FAT32/installer host tests PASS; runtime unverified |
 
-## Stage A: source publication
+## Stage A: source publication — completed
 
-1. Import the complete reviewed v33 source-only package into `v33-beta/` in a dedicated PR.
+1. **Done:** import all 131 reviewed v33 source/config files into `v33-beta/` in a separate commit.
 2. Preserve existing public Alpha C files, build scripts and `VERSION` until the default build architecture is intentionally migrated.
 3. Exclude generated ISO/IMG, build outputs, private files and credentials.
-4. Set up independent C++/ELF64 compiler checks; do not share or replace Alpha build outputs.
+4. **Done (compile/link):** independent v33 C++/ELF64 CI builds loader and kernel; Alpha CI remains separate.
 
 ## Stage B: reproducible boot
 

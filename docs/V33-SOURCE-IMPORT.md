@@ -1,8 +1,14 @@
-# Publish all reviewed zeroNT v33.0 Beta sources to GitHub
+# zeroNT v33.0 Beta source import — completed
 
 The full source-only ZIP has been prepared as `zeroNT_v33_0_BETA_GITHUB_SOURCE_ONLY.zip` (SHA-256: `d6ea406d948bb42517fba77637ac382edad8a1bb23b122a990712f3d63b286d0`). It contains **131 text/source/config entries** under `v33-beta/`; no ISO, disk image, UEFI binary or local object file.
 
-## Upload using Git on Windows 11
+## GitHub publication status
+
+**Completed 2026-10-31:** All 131 text/source/config files were committed under [`v33-beta/`](../v33-beta/). The public root is still Alpha `0.1.0-alpha` because the v33 UEFI/ELF64 build is separate. The independently configured GitHub Actions workflow compiled and linked the v33 UEFI loader and ELF64 kernel successfully.
+
+The Windows upload steps below remain only for future re-import/maintenance; **do not repeat them just to make the source appear in GitHub**.
+
+## Upload using Git on Windows 11 (historical procedure)
 
 Download the source-only ZIP and the prepared publish package, unzip locally, then run `PUBLISH_TO_GITHUB.ps1` with PowerShell:
 

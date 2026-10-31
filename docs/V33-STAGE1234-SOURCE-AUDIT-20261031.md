@@ -8,7 +8,7 @@ Received user-provided `zeroNT_v33_0_BETA_STAGE1234_FIX_ALL.zip`, which contains
 - Nested FULL_SOURCE.zip SHA-256: `8c94d2704f3394a4097081475a91bc6b922c7ef352109e2255de0ad9466b438e`
 - Nested archive contains 254 ZIP entries, including generated binaries/build logs. Source-level import must exclude those files and storage images.
 
-These checksums identify the specific uploaded input. **The full v33 source tree has not been committed to this GitHub branch.** The latest public `main` is still Alpha `0.1.0-alpha`, with a different PE32+ kernel/loader architecture.
+These checksums identify the specific uploaded input. **Update 2026-10-31: the full source-only snapshot (131 files) has since been committed under [`v33-beta/`](../v33-beta/).** The latest public `main` is still Alpha `0.1.0-alpha`, with a different PE32+ kernel/loader architecture.
 
 ## Fresh build and host checks
 
@@ -32,7 +32,7 @@ The tests above used a working copy of the 64 MiB rootfs image. **No QEMU/VMware
 
 ## Recommended next gate
 
-1. Import audited v33 C++/header/build scripts under a separate `v33-beta/` subtree on a dedicated branch (no generated disk images).
+1. **Completed:** imported audited v33 C++/header/build scripts under a separate `v33-beta/` subtree (no generated disk images).
 2. Provide the 64 MiB FAT32 rootfs separately for local rebuild, not as a Git blob.
 3. Make Windows Clang and Linux Clang builds reproducible, preserving public Alpha CI.
 4. Capture QEMU serial output and graphical runtime, and verify installer + reboot using a disposable virtual disk.

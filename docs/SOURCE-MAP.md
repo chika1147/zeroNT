@@ -15,7 +15,7 @@ scripts/                  Alpha build/QEMU, serial checker, v33 archive inventor
 tests/                    Host-side tests
 ```
 
-## v33.0 Beta Stage 1–4 source mapping (separate package, **import pending**)
+## v33.0 Beta Stage 1–4 source mapping (**now in GitHub**)
 
 ```text
 v33-beta/bootloader/main.cpp   UEFI PE application + ELF64 handoff
@@ -31,4 +31,4 @@ v33-beta/build.ps1             Windows toolchain build
 v33-beta/Makefile              Linux/Clang build
 ```
 
-These `v33-beta/` paths describe the reviewed source package and will become GitHub paths only after its source-only import PR is merged. Do not overwrite Alpha's `boot/`, `kernel/`, or `VERSION` merely to change the README badge.
+These `v33-beta/` paths now exist in this GitHub repository. They are distinct from Alpha's `boot/`, `kernel/`, and `VERSION`. Host CI does not prove v33 QEMU runtime support.
