@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Read-only zeroNT source inventory. Never extracts or executes ZIP contents."""
 import argparse
+import io
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
@@ -33,12 +34,33 @@ def inventory(path):
         if not zipfile.is_zipfile(path):
             raise ValueError("Expected a directory or valid .zip archive")
         with zipfile.ZipFile(path) as archive:
-            names = sorted(item.filename.replace("\\", "/") for item in archive.infolist() if not item.is_dir() and safe_member(item.filename))
+            outer_members = [item for item in archive.infolist()
+                             if not item.is_dir() and safe_member(item.filename)]
+            nested = [item for item in outer_members
+                      if item.filename.endswith("FULL_SOURCE.zip")]
+            if len(nested) == 1:
+                # Stage 1-4 ALL.zip ships its actual source ZIP inside the package.
+                # Only read its small compressed source archive; never extract it.
+                if nested[0].file_size > 32 * 1024 * 1024:
+                    raise ValueError("Nested FULL_SOURCE.zip is too large for inventory")
+                nested_bytes = archive.read(nested[0])
+                with zipfile.ZipFile(io.BytesIO(nested_bytes)) as source_archive:
+                    names = sorted(item.filename.replace("\\", "/")
+                                   for item in source_archive.infolist()
+                                   if not item.is_dir() and safe_member(item.filename))
+                nested_digest = hashlib.sha256(nested_bytes).hexdigest()
+                kind = "nested_source_zip"
+            elif len(nested) > 1:
+                raise ValueError("Multiple nested FULL_SOURCE.zip archives found")
+            else:
+                names = sorted(item.filename.replace("\\", "/") for item in outer_members)
+                nested_digest = None
+                kind = "zip"
         source_digest = sha256(path)
-        kind = "zip"
     elif path.is_dir():
         names = sorted(str(p.relative_to(path)).replace("\\", "/") for p in path.rglob("*") if p.is_file() and not p.is_symlink())
         source_digest = None
+        nested_digest = None
         kind = "directory"
     else:
         raise ValueError("Expected an ordinary directory or ZIP")
@@ -48,6 +70,7 @@ def inventory(path):
         "source": str(path),
         "kind": kind,
         "archive_sha256": source_digest,
+        "nested_source_sha256": nested_digest,
         "files_total": len(names),
         "source_files": len(src),
         "candidate_paths": candidate,
