@@ -4,7 +4,7 @@
 
 The public GitHub `main` still represents `0.1.0-alpha`, with a PE32+ NT Native `ntoskrnl.exe` booted by an x86-64 UEFI PE loader. Past v33.0 Beta development uses a different ELF64 kernel and installer/GUI/filesystem pipeline. **Do not rename this Alpha tree as v33 or copy binaries into it without comparing the actual sources.**
 
-The v33.0 Beta source ZIP was **not available** when Stage 1 was prepared. No v33 files have been merged by this change. Zero64OS and ZeroDrivers are separate projects and must not be used as substitutes.
+The original Stage 1 document was drafted before the complete v33 source was available. On **2026-10-31**, the v33.0 Beta Stage 1–4 FULL_SOURCE.zip was supplied inside an ALL.zip archive and inspected. Fresh Clang/LLD 17 host compilation and FAT32/installer/rootfs tests passed; see [the source audit](V33-STAGE1234-SOURCE-AUDIT-20261031.md). The full C++/ELF64 sources are **not yet committed to this GitHub tree** and QEMU/VMware runtime remains unverified. Zero64OS and ZeroDrivers are separate projects and are not substituted for zeroNT.
 
 ## Deliverables in this stage
 
@@ -30,17 +30,17 @@ If firmware or emulator paths are not discovered, specify:
 
 Expected generated serial log: `build/qemu-boot-serial.log`. A PASS proves only the three **kernel startup markers** were seen in order; it does **not** establish successful GUI use, file writes, device DMA, USB HID transfer, installation, or persistence. A FAIL/timeout requires inspection of the fresh log.
 
-Inventory a real zeroNT v33.0 Beta source ZIP, when available:
+Inventory the supplied zeroNT v33.0 Beta source ZIP (either the nested ALL.zip or a standalone FULL_SOURCE.zip):
 
 ```powershell
 python .\scripts\inventory-v33-source.py "C:\path\to\zeroNT_v33_0_BETA_STAGE1234_FIX_FULL_SOURCE.zip" --output .\build\v33-source-inventory.json
 ```
 
-This produces candidate file names and a checksum; review the archive contents and license/security issues before any source upload. Do not upload large ISO/IMG files or local build folders to GitHub automatically. The ZIP path above is an example **from previous development records**, not a claim that the file is on the current machine.
+This produces candidate file names and a checksum; the archive has now been supplied and tested. Review license/security issues before upload. Do not upload large ISO/IMG files or generated build folders. For the source-only import, follow [V33-SOURCE-IMPORT.md](V33-SOURCE-IMPORT.md).
 
 ## Acceptance gates for the *next* actual source integration
 
-- Obtain the real full v33 source tree, not screenshots, hashes alone, or a different OS project.
+- **Completed:** obtain the real full v33 source tree; ZIP checksums and host test results are recorded in the audit.
 - Preserve the latest working Alpha baseline and successful host CI.
 - Compare its UEFI/ELF64 loader ABI to Alpha's PE32+ entry; select one architecture for a dedicated migration branch.
 - First make UEFI → kernel entry → serial READY reproducibly boot in QEMU; capture firmware/QEMU version and logs.

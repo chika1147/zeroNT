@@ -1,10 +1,25 @@
-# Build status
+# Build and validation status (2026-10-31)
 
-Public Alpha 0.1 source validation:
+## Public root: `0.1.0-alpha`
 
-- Clang/LLD 17 compile/link: PASS
-- warnings as errors: PASS
-- PE32+ NT Native kernel: PASS
-- PE32+ EFI application loader: PASS
-- ALPC host transport test: PASS
-- QEMU runtime in artifact environment: NOT RUN (QEMU unavailable)
+- Current GitHub `main` root source: NT Native PE32+ kernel.
+- GitHub Actions: Clang/LLD compilation, ALPC host test, HID/USB Mass Storage host test, PMM/DMA host test, and Python boot-log/inventory host tests: **PASS**.
+- Latest merged test gate: PR #2.
+- QEMU boot in CI: **NOT EXECUTED**.
+- End-to-end storage, GUI and installation: **NOT VERIFIED**.
+
+## Separately received v33.0 Beta Stage 1–4 source package
+
+- Full source supplied in a nested ZIP; source-only and independently buildable packages prepared.
+- Fresh Linux/Clang 17 `make -j2 all`: **PASS**, producing EFI application, ELF64 PIE kernel and 96 MiB FAT32 boot media.
+- Host FAT32 LFN: **PASS**.
+- Host recursive FAT32 tree copy/move/delete: **PASS**.
+- Installer logic simulated on a disposable image: **PASS**.
+- Rootfs verification of 5 ZEX and 13 SYSTEM32 EXE entries: **PASS**.
+- QEMU or VMware *runtime* boot and GUI: **NOT VERIFIED**.
+- Installed HDD-only reboot, persistent UEFI boot entry, xHCI/NVMe hardware transfer: **NOT VERIFIED**.
+- Complete v33 source on GitHub: **SOURCE IMPORT PENDING**.
+
+Details and artifact hashes: [v33 audit](V33-STAGE1234-SOURCE-AUDIT-20261031.md).
+
+**Never use build PASS as shorthand for runtime PASS.** Root `VERSION` remains `0.1.0-alpha` until the root build is intentionally replaced and verified.

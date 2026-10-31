@@ -1,0 +1,56 @@
+name: zeroNT v33 Beta source-only build
+
+on:
+  push:
+    paths:
+      - 'v33-beta/**'
+      - '.github/workflows/v33-source-ci.yml'
+  pull_request:
+    paths:
+      - 'v33-beta/**'
+      - '.github/workflows/v33-source-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v33-source-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect v33 source import
+        id: source
+        shell: bash
+        run: |
+          if [ -f v33-beta/Makefile ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "Source-only v33 subtree has not been imported yet; no v33 build is claimed."
+          fi
+
+      - name: Install Clang and LLD
+        if: steps.source.outputs.present == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang lld llvm make file
+
+      - name: Build standalone v33 ELF64 kernel and EFI loader
+        if: steps.source.outputs.present == 'true'
+        run: |
+          make -C v33-beta -j2 build/BOOTX64.EFI build/kernel.elf
+
+      - name: Inspect produced image formats
+        if: steps.source.outputs.present == 'true'
+        run: |
+          file v33-beta/build/BOOTX64.EFI v33-beta/build/kernel.elf
+          test -s v33-beta/build/BOOTX64.EFI
+          test -s v33-beta/build/kernel.elf
+          file v33-beta/build/BOOTX64.EFI | grep -q 'PE32+'
+          file v33-beta/build/kernel.elf | grep -q 'ELF 64-bit'
+
+# This is a compile/link job only. It does not boot QEMU, test devices,
+# install to a virtual disk, or prove production readiness.
