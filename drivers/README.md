@@ -1,18 +1,21 @@
 # NTZero Drivers — Alpha 0.1
 
-The public driver tree is a real kernel-side hardware baseline rather than empty placeholders.
+The public driver tree contains low-level implementations and host-tested protocol helpers, but not all drivers perform end-to-end hardware I/O. This document describes the source at `main` commit `339b30b`; it is not a feature list for the separate v33.0 Beta development line.
 
 ## Compiled into `ntoskrnl.exe`
 
 | Driver area | File | Alpha 0.1 status |
 |---|---|---|
 | PCI configuration + enumeration | `pci.c` | implemented |
+| IDT / exception-vector foundation | `../kernel/interrupts.c` | initialized at startup, interrupts masked; device delivery not validated |
+| PMM / contiguous DMA foundation | `../kernel/memory.c` | initialized at startup; identity-mapped baseline, host-tested |
+| PCI MSI capability/configuration | `pci_msi.c` | functions implemented; IRQ delivery not validated |
 | PS/2 keyboard/mouse controller APIs | `legacy.c` | implemented, IRQ activation deferred |
 | PIT timer + RTC CMOS reads | `legacy.c` | implemented, activation deferred |
 | Local APIC / I/O APIC MMIO APIs | `apic.c` | implemented, routing deferred |
 | ACPI RSDP/XSDT table parser | `acpi.c` | implemented; UEFI RSDP handoff not wired yet |
 | AHCI | `storage.c` | PCI/BAR detection; DMA/FIS/command-list engine next |
-| NVMe | `storage.c` | PCI/BAR detection; admin + I/O queue engine next |
+| NVMe | `storage.c`, `nvme.c` | PCI detection + polled admin queue with Controller/Namespace Identify; I/O queue and block reads/writes not implemented |
 | xHCI | `usb.c` | PCI/BAR detection; command/event/transfer rings next |
 | USB HID keyboard/mouse protocol | `hid.c` | boot-report decode implemented and host-tested |
 | USB Mass Storage BOT/SCSI | `usb_mass.c` | CBW/CSW, INQUIRY, READ CAPACITY, READ(10), WRITE(10) builders implemented and host-tested |
@@ -24,31 +27,29 @@ The public driver tree is a real kernel-side hardware baseline rather than empty
 
 ## Safe early-boot behavior
 
-`DriversInitializeAll()` performs PCI discovery and reports detected controller classes over COM1 serial. It does **not** start DMA engines or enable device interrupts before the kernel has a finished physical-memory allocator, DMA allocator, IDT and IRQ-routing layer.
+`KiSystemStartup()` installs the IDT, initializes the physical-memory manager and the contiguous DMA allocator, and calls `DriversInitializeAll()` for PCI discovery. A detected NVMe controller can be initialized through a **polled admin queue** to issue Identify commands. The kernel keeps interrupts masked at startup; AHCI/xHCI/NIC/HDA data-transfer paths are not enabled by this initialization.
 
-That separation is intentional. It keeps Alpha 0.1 bootable while still compiling real driver/protocol code into `ntoskrnl.exe`.
+In `drivers/nvme.c`, `NvmeReadBlocks()` prepares a read request but intentionally returns `STATUS_PENDING` instead of submitting a READ command: NVMe I/O queue creation is not implemented. Do not interpret successful Identify or host test results as working disk reads.
 
 ## Runtime activation dependencies
 
 ```text
-IDT / exception handlers
-        +
-APIC / MSI / MSI-X routing
-        +
-physical + virtual memory manager
-        +
-DMA allocator / mapping
-        ↓
-AHCI command engine
-NVMe admin + I/O queues
-xHCI command/event/transfer rings
-VirtIO virtqueues
-NIC TX/RX rings
-HDA audio streams
-        ↓
-USB HID / USB Mass Storage transports
-Networking / Wi-Fi
-Audio
+In tree (foundations; runtime not fully validated):
+  IDT + exception vectors
+  physical-page allocator + identity-mapped DMA
+  PCI MSI functions, APIC MMIO helpers
+  NVMe polled admin Identify
+             |
+             v
+Still needed for full runtime:
+  APIC/IRQ delivery + correct device handlers
+  virtual memory and robust DMA mapping
+  NVMe I/O queues + actual block reads/writes
+  AHCI command/FIS, xHCI command/event/transfer rings
+  VirtIO virtqueues, NIC TX/RX, HDA audio streams
+             |
+             v
+  End-to-end USB storage/input, networking, audio, GUI
 ```
 
 ## CI validation
@@ -58,5 +59,6 @@ GitHub Actions builds the complete kernel with warnings-as-errors and runs host-
 - ALPC create/connect/accept/message transport
 - USB HID keyboard/mouse report decoding
 - USB Mass Storage BOT/SCSI packet construction and CSW validation
+- physical-page manager and DMA allocator host tests
 
-Hardware runtime support is only marked complete after QEMU or real-machine validation.
+[The latest CI workflow for `339b30b`](https://github.com/chika1147/zeroNT/actions/runs/33864792682) passed compilation and these host tests. It does not run QEMU; device I/O and complete runtime behavior still require QEMU or real-hardware validation.
