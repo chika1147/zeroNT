@@ -1,155 +1,116 @@
-# NTZero
+# zeroNT
 
-> A from-scratch NT-inspired x86_64 operating system project.
+**自作 x86-64 オペレーティングシステム / From-scratch x86-64 operating system**
 
-![status](https://img.shields.io/badge/status-Alpha%200.1-orange)
-![arch](https://img.shields.io/badge/arch-x86__64-blue)
-![boot](https://img.shields.io/badge/boot-UEFI-blue)
-![target](https://img.shields.io/badge/target-QEMU-purple)
+![v33 Beta](https://img.shields.io/badge/development-v33.0%20Beta-orange)
+![Public main](https://img.shields.io/badge/public%20baseline-Alpha%200.1-blue)
+![Arch](https://img.shields.io/badge/arch-x86__64-informational)
+![Boot](https://img.shields.io/badge/boot-UEFI-informational)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## NTZero Alpha 0.1
+> **重要 / Important:** zeroNT has **two distinct code lines**. The repository root still builds the public **0.1.0-alpha** PE32+ NT Native kernel. A separate **v33.0 Beta Stage 1–4** C++/ELF64 source package has been inspected and host-tested, but **its complete source files are not yet in `main`**. Do not confuse source compilation with a successful OS boot.
 
-**NTZero Alpha 0.1** is the first public developer preview of NTZero.
+## 現在の開発状況 / Project status
 
-The public Alpha tree contains a buildable x86-64 UEFI loader, a PE32+ NT Native kernel entry path, COM1 serial diagnostics, an in-kernel ALPC transport core and the first native hardware-driver framework.
+| 項目 / Track | 内容 / Status | GitHub 状況 |
+|---|---|---|
+| **v33.0 Beta (active development)** | 独自UEFI/ELF64カーネル、クラシックGUI、FAT32/SafeFS、インストーラー、ドライバー群 | Source-only import is being prepared; **not a release** |
+| **0.1.0-alpha (public baseline)** | UEFI PE32+ loader + NT Native kernel + IDT/PMM/DMA/PCI/NVMe foundations + ALPC | **Available and CI-tested under repository root** |
+| **公開安定版 / Stable release** | End-to-end QEMU, persistent install/reboot and hardware validation | **Not available** |
 
-> [!WARNING]
-> Alpha 0.1 is development software. QEMU is the primary runtime target. Do not use it for important data or production systems.
+The repository root `VERSION` remains `0.1.0-alpha` because the root build scripts still build the Alpha kernel. **v33.0 Beta is the development-track name, not the version of the root build**.
 
-### Public source vs. later development
+## v33.0 Beta — 開発中の機能
 
-The public `main` branch and `VERSION` file describe **0.1.0-alpha**, not zeroNT v33.0 Beta. Later v33.0 Beta work discussed outside this repository (GUI, FAT32, installer, and recovery) is **not verified or published as part of this source tree**. This repository must not be described as a working v33.0 Beta release without a separate source comparison and boot/runtime validation.
+The uploaded v33.0 Beta Stage 1–4 source package contains code for:
 
-## What is in the public Alpha source
+- **UEFI + ELF64 kernel:** `BOOTX64.EFI` loader and `KERNEL.ELF` kernel, distinct from the Alpha `ntoskrnl.exe`.
+- **Classic desktop:** windows, Explorer, taskbar, Start menu, keyboard/mouse input and display settings.
+- **Storage and recovery:** FAT32, SafeFS journal/repair components, block-device APIs, and installer code.
+- **Hardware foundations:** PS/2, PCI, NVMe, AHCI, xHCI, display, audio and networking.
+- **Applications:** user-mode ZEX test apps and SYSTEM32 applications.
 
-- x86-64 UEFI `BOOTX64.EFI` loader source
-- manual PE32+ kernel mapping
-- final UEFI memory-map handoff and `ExitBootServices()`
-- `ntoskrnl.exe` linked as NT Native, preferred ImageBase `0x10000000`
-- `KiSystemStartup`
-- COM1 serial diagnostics
-- ALPC connection ports, client/server ports and message queues
-- native hardware-driver framework
-- PCI configuration-space enumeration
-- PS/2 keyboard/mouse controller APIs
-- PIT timer and RTC CMOS access
-- Local APIC and I/O APIC MMIO APIs
-- ACPI RSDP/XSDT parser
-- IDT/exception-vector foundation (device interrupts remain masked at startup)
-- physical-page manager and contiguous DMA allocator (identity-mapping baseline)
-- PCI MSI capability discovery/configuration foundation
-- AHCI and NVMe controller detection
-- polled NVMe admin queue with Controller/Namespace Identify path (not NVMe block read/write)
-- USB HID report decoding and USB Mass Storage BOT/SCSI protocol helpers
-- xHCI controller detection
-- VirtIO PCI device detection
-- Intel e1000 / RTL8139 network-controller detection
-- linear framebuffer pixel/clear API
-- GitHub Actions compile/link validation
+These are **source features**, not claims of end-to-end driver or hardware completion. The v33 package's current status is recorded in [v33 source audit](docs/V33-STAGE1234-SOURCE-AUDIT-20261031.md). The [integration plan](docs/V33-INTEGRATION-STAGE1.md) keeps its ELF64 architecture separate from Alpha's PE32+ architecture.
 
-## Driver status
+## 検証結果 / Validation
 
-The tree distinguishes **compiled foundations**, **host-tested protocols**, **controller detection**, and **runtime-complete drivers**. These are not interchangeable.
-
-| Area | Current public Alpha source state |
+| 検証項目 | v33.0 Beta Stage 1–4 |
 |---|---|
-| PCI | configuration read/write and bus/device/function enumeration |
-| IDT / interrupts | exception and vector-table foundation in `kernel/interrupts.c`; device interrupts remain masked at startup |
-| PMM / DMA | physical-page allocator and contiguous DMA allocator in `kernel/memory.c`; identity-mapped baseline and host tests, not a complete virtual-memory/DMA subsystem |
-| PCI MSI | capability discovery and MSI configuration functions in `drivers/pci_msi.c`; end-to-end interrupt delivery not validated |
-| PS/2 | keyboard/mouse controller polling APIs; interrupt-driven input not validated |
-| PIT / RTC | low-level timer/CMOS access |
-| LAPIC / I/O APIC | MMIO/routing APIs; full IRQ activation not validated |
-| ACPI | RSDP/XSDT parser and table lookup; boot RSDP handoff remains to be wired |
-| AHCI | PCI class/BAR detection; DMA command engine pending |
-| NVMe | PCI detection and polled admin queue for Controller/Namespace Identify; **I/O queue and real block read/write pending** |
-| USB HID / USB Mass Storage | report decoding and BOT/SCSI protocol helpers host-tested; xHCI device transfers not complete |
-| xHCI | PCI detection; command/event/transfer rings pending |
-| VirtIO | device-class identification; virtqueues pending |
-| e1000 / RTL8139 | identification; TX/RX descriptor rings pending |
-| Framebuffer | put-pixel/clear API; UEFI GOP framebuffer handoff pending |
+| UEFI EFI build and ELF64 kernel link (Clang/LLD 17) | **PASS (host build)** |
+| FAT32 LFN regression | **PASS (host test)** |
+| FAT32 recursive copy/move/delete | **PASS (host test)** |
+| Installer GPT/FAT32 logic simulation | **PASS (host test)** |
+| Rootfs: 5 ZEX + 13 SYSTEM32 EXEs | **PASS (host verification)** |
+| QEMU/VMware boot, GUI input, real storage, installed-HDD reboot | **NOT VERIFIED** |
 
-At kernel startup, `KiSystemStartup()` initializes the IDT and PMM/DMA foundations, then `DriversInitializeAll()` enumerates PCI devices and attempts polled NVMe Identify when a matching controller is found. This does **not** imply working storage I/O, interrupt-driven device engines, or a GUI desktop.
+**No QEMU/VMware runtime pass is claimed for the v33 source package.** The public Alpha GitHub Actions pipeline checks compilation and host tests; it does not prove v33 runtime support. See [build status](docs/BUILD-STATUS.md).
 
-See [drivers/README.md](drivers/README.md) for the detailed driver matrix.
-
-## ALPC status
-
-The scheduler-backed blocking wait/wake path for ALPC is the next IPC integration step. When no message is queued, the current public Alpha transport returns `STATUS_PENDING` rather than sleeping the caller.
-
-## Build on Windows
-
-Requirements:
-
-- LLVM/Clang
-- LLD
-- QEMU x86-64
-- EDK2/OVMF x86-64 firmware
-
-Build:
-
-```powershell
-.\scripts\build.ps1
-```
-
-Run — no Stage or CPU-count argument is required:
-
-```powershell
-.\scripts\run-qemu.ps1
-```
-
-The run script defaults to QEMU `q35`, 2 GiB RAM and 4 virtual CPUs.
-
-## Expected serial start
-
-```text
-NTZero Alpha 0.1
-KiSystemStartup: x86_64 native kernel entered
-BOOT: UEFI ExitBootServices complete
-IDT: exceptions + IRQ/MSI vector table installed (interrupts masked)
-PMM: free pages = ...
-DMA: contiguous physical allocator ready (identity-map baseline)
-DRIVER: NTZero driver framework start
-DRIVER: PCI devices = ...
-DRIVER: storage controllers = ...
-DRIVER: xHCI controllers = ...
-DRIVER: network controllers = ...
-DRIVER: VirtIO devices = ...
-DRIVER: display devices = ...
-ALPC: kernel transport initialized
-NTZero Alpha 0.1: READY
-```
-
-## Repository layout
+## ソースコードの構成 / Repository layout
 
 ```text
 zeroNT/
-├─ boot/uefi/          UEFI boot loader
-├─ kernel/             native kernel and ALPC core
-├─ drivers/            PCI/platform/input/storage/USB/net/video driver code
-├─ include/ntzero/     public/internal kernel headers
-├─ tests/              host-side subsystem tests
-├─ scripts/            build and QEMU launch scripts
-├─ docs/               build, validation and history
-├─ build/              generated outputs (ignored)
-├─ VERSION
-└─ README.md
+├── boot/                  Public Alpha UEFI loader
+├── kernel/                Public Alpha NT Native kernel
+├── drivers/               Public Alpha hardware foundations
+├── include/               Public Alpha headers
+├── scripts/               Alpha build, QEMU startup and v33 audit helpers
+├── tests/                 Public Alpha host tests
+├── docs/                  Development, validation, and source-import reports
+├── VERSION                Current public root build: 0.1.0-alpha
+└── v33-beta/              Separate C++/ELF64 source subtree (import pending)
 ```
 
-## Validation
+**Do not overwrite `boot/` or `kernel/` with the v33 code.** Import v33 under `v33-beta/` on a dedicated branch first. After the source import, v33 build instructions will be in `v33-beta/README.md`.
 
-GitHub Actions compiles/links the UEFI loader and NT Native kernel with Clang/LLD and warnings-as-errors (`-Wall -Wextra -Werror`). The workflow also builds and executes host-side tests for ALPC, USB HID/USB Mass Storage protocol helpers, and PMM/DMA. [The workflow for commit `339b30b`](https://github.com/chika1147/zeroNT/actions/runs/33864792682) concluded successfully on 2026-09-04.
+## ビルド / Build
 
-**The workflow does not boot QEMU.** Passing compilation and host tests is not proof of successful `ExitBootServices()` on the current build, NVMe transfers, device IRQs, GUI functionality, installation, or v33.0 Beta runtime behavior.
+### Public Alpha 0.1 (current repository root, Windows PowerShell)
 
-See [docs/BUILD.md](docs/BUILD.md) and [docs/VALIDATION-ALPHA-0.1.md](docs/VALIDATION-ALPHA-0.1.md).
+Requirements: LLVM/Clang, LLD, QEMU x86-64 and OVMF/EDK2.
 
-## Development direction
+```powershell
+.\scripts\build.ps1
+.\scripts\run-qemu.ps1
+```
 
-Current IDT, physical-page allocator, identity-mapped DMA allocation, and PCI MSI functions are foundations, not completed end-to-end subsystems. Next work includes validating QEMU boot and memory handoff, interrupt routing and handlers, virtual memory/DMA mappings, NVMe I/O queues and block reads, AHCI/xHCI/VirtIO/network transfer engines, scheduler-backed waits, Ring 3, and native syscalls. The separate v33.0 Beta development line needs its own source and runtime verification before public versioning changes.
+Optional serial-log smoke test (does **not** validate GUI or installation):
 
-Historical v4.0-v5.0 development notes are preserved in [docs/HISTORY-v4-v5.md](docs/HISTORY-v4-v5.md). They are historical milestones and should not be read as a claim that every earlier subsystem is already restored in the public Alpha 0.1 tree.
+```powershell
+.\scripts\test-qemu-boot.bat --timeout 120
+```
+
+### v33.0 Beta (separate **local source package**)
+
+Build the separately provided full v33 source package; these commands are **not** for the current repository root:
+
+```powershell
+.\build.ps1
+.\verify-beta.ps1
+```
+
+On Linux with Clang/LLD:
+
+```bash
+make -j2 all
+```
+
+The source-only ZIP intentionally excludes generated images, including the FAT32 rootfs image required by some packaging and runtime tests. Use the separate verified buildable source package for complete local builds until this dependency is reproducibly generated from source.
+
+To upload all v33 sources, follow [GitHub source import guide](docs/V33-SOURCE-IMPORT.md). The import requires an authenticated Git push; updating this README alone does not publish the v33 code.
+
+## 今後の目標 / Next steps
+
+1. Publish the reviewed **source-only** `v33-beta/` tree in a separate PR without images, ISO, or credentials.
+2. CI-build the EFI loader and ELF64 kernel with Clang/LLD, retaining Alpha CI.
+3. Run and record QEMU/OVMF boot logs, GUI/input and installed virtual-disk reboot tests.
+4. Fix remaining device, installation, and recovery regressions before any release or stable badge.
+
+See [ROADMAP](docs/ROADMAP.md), [CHANGELOG](CHANGELOG.md), and [Security](SECURITY.md).
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
+
+---
+
+**English summary:** zeroNT is a from-scratch NT-inspired hobby OS. The GitHub repository currently holds a CI-tested Alpha baseline and documentation about the separately built v33.0 Beta source package. The v33 source itself will be published under its own subtree, and no production-ready claim is made.
