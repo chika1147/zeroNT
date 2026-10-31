@@ -16,6 +16,10 @@ The public Alpha tree contains a buildable x86-64 UEFI loader, a PE32+ NT Native
 > [!WARNING]
 > Alpha 0.1 is development software. QEMU is the primary runtime target. Do not use it for important data or production systems.
 
+### Public source vs. later development
+
+The public `main` branch and `VERSION` file describe **0.1.0-alpha**, not zeroNT v33.0 Beta. Later v33.0 Beta work discussed outside this repository (GUI, FAT32, installer, and recovery) is **not verified or published as part of this source tree**. This repository must not be described as a working v33.0 Beta release without a separate source comparison and boot/runtime validation.
+
 ## What is in the public Alpha source
 
 - x86-64 UEFI `BOOTX64.EFI` loader source
@@ -31,7 +35,12 @@ The public Alpha tree contains a buildable x86-64 UEFI loader, a PE32+ NT Native
 - PIT timer and RTC CMOS access
 - Local APIC and I/O APIC MMIO APIs
 - ACPI RSDP/XSDT parser
+- IDT/exception-vector foundation (device interrupts remain masked at startup)
+- physical-page manager and contiguous DMA allocator (identity-mapping baseline)
+- PCI MSI capability discovery/configuration foundation
 - AHCI and NVMe controller detection
+- polled NVMe admin queue with Controller/Namespace Identify path (not NVMe block read/write)
+- USB HID report decoding and USB Mass Storage BOT/SCSI protocol helpers
 - xHCI controller detection
 - VirtIO PCI device detection
 - Intel e1000 / RTL8139 network-controller detection
@@ -40,23 +49,27 @@ The public Alpha tree contains a buildable x86-64 UEFI loader, a PE32+ NT Native
 
 ## Driver status
 
-The driver tree is intentionally split between **implemented**, **detected**, and **waiting for kernel infrastructure**.
+The tree distinguishes **compiled foundations**, **host-tested protocols**, **controller detection**, and **runtime-complete drivers**. These are not interchangeable.
 
-| Area | Current Alpha 0.1 state |
+| Area | Current public Alpha source state |
 |---|---|
-| PCI | configuration read/write + full bus/device/function enumeration |
-| PS/2 | controller init + keyboard/mouse polling APIs; IRQ path waits for IDT routing |
-| PIT / RTC | low-level timer/CMOS access implemented |
-| LAPIC / I/O APIC | MMIO enable/EOI/routing APIs implemented |
-| ACPI | RSDP/XSDT checksum parser and table lookup implemented; boot RSDP handoff is next |
-| AHCI | PCI class/BAR detection; DMA command-list/FIS engine is next |
-| NVMe | PCI class/BAR detection; admin/I/O queue engine is next |
-| xHCI | PCI class/BAR detection; command/event/transfer rings are next |
-| VirtIO | block/net/console/GPU PCI identification; virtqueues are next |
-| e1000 / RTL8139 | controller identification; descriptor/DMA rings are next |
-| Framebuffer | native put-pixel/clear API; UEFI GOP handoff is next |
+| PCI | configuration read/write and bus/device/function enumeration |
+| IDT / interrupts | exception and vector-table foundation in `kernel/interrupts.c`; device interrupts remain masked at startup |
+| PMM / DMA | physical-page allocator and contiguous DMA allocator in `kernel/memory.c`; identity-mapped baseline and host tests, not a complete virtual-memory/DMA subsystem |
+| PCI MSI | capability discovery and MSI configuration functions in `drivers/pci_msi.c`; end-to-end interrupt delivery not validated |
+| PS/2 | keyboard/mouse controller polling APIs; interrupt-driven input not validated |
+| PIT / RTC | low-level timer/CMOS access |
+| LAPIC / I/O APIC | MMIO/routing APIs; full IRQ activation not validated |
+| ACPI | RSDP/XSDT parser and table lookup; boot RSDP handoff remains to be wired |
+| AHCI | PCI class/BAR detection; DMA command engine pending |
+| NVMe | PCI detection and polled admin queue for Controller/Namespace Identify; **I/O queue and real block read/write pending** |
+| USB HID / USB Mass Storage | report decoding and BOT/SCSI protocol helpers host-tested; xHCI device transfers not complete |
+| xHCI | PCI detection; command/event/transfer rings pending |
+| VirtIO | device-class identification; virtqueues pending |
+| e1000 / RTL8139 | identification; TX/RX descriptor rings pending |
+| Framebuffer | put-pixel/clear API; UEFI GOP framebuffer handoff pending |
 
-`DriversInitializeAll()` currently performs safe PCI discovery at kernel startup and prints controller counts to COM1. Hardware requiring a finished IDT, interrupt routing, physical-memory allocator or DMA allocator is compiled but deliberately not fully activated yet.
+At kernel startup, `KiSystemStartup()` initializes the IDT and PMM/DMA foundations, then `DriversInitializeAll()` enumerates PCI devices and attempts polled NVMe Identify when a matching controller is found. This does **not** imply working storage I/O, interrupt-driven device engines, or a GUI desktop.
 
 See [drivers/README.md](drivers/README.md) for the detailed driver matrix.
 
@@ -93,6 +106,9 @@ The run script defaults to QEMU `q35`, 2 GiB RAM and 4 virtual CPUs.
 NTZero Alpha 0.1
 KiSystemStartup: x86_64 native kernel entered
 BOOT: UEFI ExitBootServices complete
+IDT: exceptions + IRQ/MSI vector table installed (interrupts masked)
+PMM: free pages = ...
+DMA: contiguous physical allocator ready (identity-map baseline)
 DRIVER: NTZero driver framework start
 DRIVER: PCI devices = ...
 DRIVER: storage controllers = ...
@@ -122,15 +138,15 @@ zeroNT/
 
 ## Validation
 
-The public Alpha source is continuously compile/link validated by GitHub Actions with Clang/LLD and `-Wall -Wextra -Werror`. The ALPC host transport test also runs in CI.
+GitHub Actions compiles/links the UEFI loader and NT Native kernel with Clang/LLD and warnings-as-errors (`-Wall -Wextra -Werror`). The workflow also builds and executes host-side tests for ALPC, USB HID/USB Mass Storage protocol helpers, and PMM/DMA. [The workflow for commit `339b30b`](https://github.com/chika1147/zeroNT/actions/runs/33864792682) concluded successfully on 2026-09-04.
 
-QEMU runtime boot still needs validation on an environment with QEMU/OVMF, so compile success is not presented as proof that every hardware driver is runtime-complete.
+**The workflow does not boot QEMU.** Passing compilation and host tests is not proof of successful `ExitBootServices()` on the current build, NVMe transfers, device IRQs, GUI functionality, installation, or v33.0 Beta runtime behavior.
 
 See [docs/BUILD.md](docs/BUILD.md) and [docs/VALIDATION-ALPHA-0.1.md](docs/VALIDATION-ALPHA-0.1.md).
 
 ## Development direction
 
-Next kernel work is the infrastructure needed to turn the detected controllers into complete runtime drivers: IDT/IRQ delivery, APIC routing, physical/virtual memory management, DMA allocation, scheduler waits, Ring 3 and native syscalls. After that the AHCI/NVMe/xHCI/VirtIO/network queue engines can be fully activated.
+Current IDT, physical-page allocator, identity-mapped DMA allocation, and PCI MSI functions are foundations, not completed end-to-end subsystems. Next work includes validating QEMU boot and memory handoff, interrupt routing and handlers, virtual memory/DMA mappings, NVMe I/O queues and block reads, AHCI/xHCI/VirtIO/network transfer engines, scheduler-backed waits, Ring 3, and native syscalls. The separate v33.0 Beta development line needs its own source and runtime verification before public versioning changes.
 
 Historical v4.0-v5.0 development notes are preserved in [docs/HISTORY-v4-v5.md](docs/HISTORY-v4-v5.md). They are historical milestones and should not be read as a claim that every earlier subsystem is already restored in the public Alpha 0.1 tree.
 
