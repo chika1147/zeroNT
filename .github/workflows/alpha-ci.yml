@@ -60,6 +60,16 @@ jobs:
         run: |
           .\build\memory_test.exe
 
+      - name: Set up Python for boot-gate host tests
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Test serial log detection and v33 source inventory (no QEMU)
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -p "test_qemu_boot_smoke.py" -v
+
       - name: Verify expected artifacts
         shell: pwsh
         run: |
